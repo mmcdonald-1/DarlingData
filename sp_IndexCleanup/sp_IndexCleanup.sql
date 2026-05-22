@@ -595,14 +595,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     CREATE TABLE
         #success_rate
     (
-        [database_name] sysname NOT NULL, 
-        [schema_name] sysname NOT NULL, 
+        database_name sysname NOT NULL, 
+        schema_name sysname NOT NULL, 
         table_name sysname NOT NULL, 
         index_name sysname NULL, 
-        partition_number INT NOT NULL, 
-        page_compression_attempt_count BIGINT NOT NULL, 
-        page_compression_success_count BIGINT NOT NULL, 
-        success_rate_pct NUMERIC(6,2) NOT NULL 
+        partition_number int NOT NULL, 
+        page_compression_attempt_count bigint NOT NULL, 
+        page_compression_success_count bigint NOT NULL, 
+        success_rate_pct numeric(6,2) NOT NULL 
     )
 
     CREATE TABLE
@@ -6482,8 +6482,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     /* Accumulate data for indexes with page compression and its compression success rate */
     INSERT INTO #success_rate
     (
-        [database_name],
-        [schema_name], 
+        database_name,
+        schema_name, 
         table_name,
         index_name,
         partition_number,
@@ -6492,20 +6492,19 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         success_rate_pct
     )
         SELECT
-        	ps.[database_name]
-        	, ps.[schema_name]
-        	, ps.table_name
-        	, ps.index_name
-        	, ps.partition_number
-        	, os.page_compression_attempt_count
-        	, os.page_compression_success_count
-        	, success_rate_pct = 
-                CASE 
-                    WHEN os.page_compression_attempt_count = 0 THEN 0.0
-                    ELSE CAST(ROUND(os.page_compression_success_count * 100.0 / os.page_compression_attempt_count,2) AS NUMERIC(6,2))
-                END 
+            ps.database_name, 
+            ps.schema_name, 
+            ps.table_name, 
+            ps.index_name, 
+            ps.partition_number, 
+            os.page_compression_attempt_count, 
+            os.page_compression_success_count, 
+            CASE 
+                WHEN os.page_compression_attempt_count = 0 THEN 0.0
+                ELSE CAST(ROUND(os.page_compression_success_count * 100.0 / os.page_compression_attempt_count,2) AS NUMERIC(6,2))
+            END as success_rate_pct
         FROM #partition_stats AS ps
-            INNER JOIN #operational_stats AS os 
+            JOIN #operational_stats AS os 
                 ON os.database_id = ps.database_id
                 AND os.[object_id] = ps.[object_id]
                 AND os.index_id = ps.index_id
@@ -6716,7 +6715,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     IF EXISTS
         (
             SELECT 1/0 
-            FROM #success_rate sr
+            FROM #success_rate as sr
         )
         BEGIN
             SELECT
@@ -6730,7 +6729,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 sr.page_compression_success_count, 
                 sr.success_rate_pct
             FROM #success_rate AS sr
-            ORDER BY success_rate_pct
+            ORDER BY sr.success_rate_pct
             OPTION(RECOMPILE)
         END 
         ELSE 
