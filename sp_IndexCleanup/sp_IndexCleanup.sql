@@ -599,7 +599,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         schema_name sysname NOT NULL, 
         table_name sysname NOT NULL, 
         index_name sysname NULL, 
-        partition_number int NOT NULL, 
+--        partition_number int NOT NULL, 
         page_compression_attempt_count bigint NOT NULL, 
         page_compression_success_count bigint NOT NULL, 
         success_rate_pct numeric(6,2) NOT NULL 
@@ -6488,7 +6488,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         schema_name, 
         table_name,
         index_name,
-        partition_number,
+--        partition_number,
         page_compression_attempt_count,
         page_compression_success_count,
         success_rate_pct
@@ -6498,9 +6498,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             ps.schema_name, 
             ps.table_name, 
             ps.index_name, 
-            ps.partition_number, 
-            os.page_compression_attempt_count, 
-            os.page_compression_success_count, 
+--            ps.partition_number, 
+            sum(os.page_compression_attempt_count) as page_compression_attempt_count, 
+            sum(os.page_compression_success_count) as page_compression_success_count, 
             CASE 
                 WHEN os.page_compression_attempt_count = 0 THEN 0.0
                 ELSE CAST(ROUND(os.page_compression_success_count * 100.0 / os.page_compression_attempt_count,2) AS NUMERIC(6,2))
@@ -6511,6 +6511,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 AND os.[object_id] = ps.[object_id]
                 AND os.index_id = ps.index_id
         WHERE ps.data_compression_desc = 'PAGE'
+        GROUP BY             
+            ps.database_name, 
+            ps.schema_name, 
+            ps.table_name, 
+            ps.index_name 
         OPTION(RECOMPILE);
 
     /* We're not doing index-level summaries - focusing on database and table level reports */
