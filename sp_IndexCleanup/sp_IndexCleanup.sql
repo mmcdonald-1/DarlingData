@@ -6481,6 +6481,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     /* Accumulate data for indexes with page compression and its compression success rate */
     INSERT INTO #success_rate
+    WITH
+        (TABLOCK) 	
     (
         database_name,
         schema_name, 
