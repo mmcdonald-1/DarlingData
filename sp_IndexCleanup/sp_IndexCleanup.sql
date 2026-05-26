@@ -601,7 +601,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         index_name sysname NULL, 
         page_compression_attempt_count bigint NOT NULL, 
         page_compression_success_count bigint NOT NULL, 
-        success_rate_pct numeric(6,2) NOT NULL 
     )
 
     CREATE TABLE
@@ -6494,7 +6493,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         index_name,
         page_compression_attempt_count,
         page_compression_success_count
---        success_rate_pct
     )
         SELECT
             ps.database_name, 
@@ -6502,13 +6500,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             ps.table_name, 
             ps.index_name, 
             sum(os.page_compression_attempt_count) as page_compression_attempt_count, 
---            sum(os.page_compression_success_count) as page_compression_success_count, 
             sum(os.page_compression_success_count) as page_compression_success_count 
---            CASE 
---                WHEN sum(os.page_compression_attempt_count) = 0 THEN 0.0
---                ELSE CAST(ROUND(sum(os.page_compression_success_count) * 100.0 / sum(os.page_compression_attempt_count),2) AS NUMERIC(6,2))
---            END as success_rate_pct
---            999.99 as success_rate_pct
         FROM #partition_stats AS ps
             JOIN #operational_stats AS os 
                 ON os.database_id = ps.database_id
